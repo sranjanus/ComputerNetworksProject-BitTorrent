@@ -1,17 +1,15 @@
-import java.util.*;
-import java.lang.*;
-import java.io.*;
-import java.lang.Math.*;
-import java.net.*;
-import java.lang.Thread;
-import java.util.Random;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.Vector;
 
 public class peerProcess {
     public static int selfID;
     public static peerConfig configInfo;
-    public static Vector<Worker> workers = new Vector<>();
-    public static Vector<Thread> wThreads = new Vector<>();
-    
+    public static Vector<Worker> workers = new Vector<Worker>();
+    public static Vector<Thread> wThreads = new Vector<Thread>();
+    public static loggerFile logfile;
+
+
     public static void main(String[] args){
         if(args.length == 0){
             System.out.println("Error: Peer ID not provided!!");
@@ -51,8 +49,10 @@ public class peerProcess {
             for(int i = 0;i < configInfo.selfIndex;i++){
                     int peerId = configInfo.peerIdList.get(i);
                     try {
+                        logfile.makesTCPConnection(peerId);
                         System.out.println("Info: Peer " + selfID + " is making TCP connection with Peer " + peerId);
                         requestSocket = new Socket(configInfo.peerList.get(peerId).getHostname(), configInfo.peerList.get(peerId).getPort());
+                        logfile.connectedTo(peerId);
                         System.out.println("Info: Peer " + selfID + " is made TCP connection with Peer " + peerId);
                         workers.add(new Worker(requestSocket, configInfo, selfID, peerId));
                         Thread thread = new Thread(workers.lastElement());
@@ -126,6 +126,10 @@ public class peerProcess {
     
     public static boolean initialize() throws Exception{
         configInfo = new peerConfig(selfID);
+        /**
+         * create log file and start logging
+         */
+        logfile = new loggerFile(selfID);
         return true;
     }
     

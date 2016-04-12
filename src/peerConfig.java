@@ -1,5 +1,5 @@
 /*
- * @author Varun and Sharath
+ * @author Varun and Sarath
  * This class is used for reading the configurations files and initilizing the structures
  * that will be used to store informations from the config files
  */
@@ -37,8 +37,8 @@ public class peerConfig {
 	{
         selfID = selfId;
         String path = System.getProperty("user.dir");
-		readCommonConfig(path + "/Common.cfg");
-		readPeerInfoConfig(path + "/PeerInfo.cfg");
+		readCommonConfig(path + "/src/Common.cfg");
+		readPeerInfoConfig(path + "/src/PeerInfo.cfg");
 	}
 	
 	public int getPrefNeighbors(){

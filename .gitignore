@@ -19,6 +19,7 @@
 *.rar
 *.tar
 *.zip
+*.iml
 
 # Logs and databases #
 ######################
@@ -30,7 +31,7 @@
 ######################
 .DS_Store
 .DS_Store?
-.idea
+.idea/
 out
 ._*
 .Spotlight-V100
