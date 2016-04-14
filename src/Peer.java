@@ -2,7 +2,6 @@ public class Peer {
     private int _id;
     private String _hostname;
     private int _port;
-    private boolean _hasCompleteFile;
     private Bitfield _bitfield;
     private boolean _isChoked;
     private boolean _isInterested;
