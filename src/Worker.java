@@ -1,9 +1,8 @@
 import java.io.*;
+import java.util.*;
 import java.net.*;
 import java.lang.Thread;
 import java.lang.Exception;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public class Worker extends Thread{
     public Socket _socket;
@@ -13,20 +12,26 @@ public class Worker extends Thread{
     OutputStream _msgWriter;
     DataFileHandler _fileHandler;
     peerConfig _configInfo;
+    Map<Integer, Peer> _peerList;
+    ArrayList<Integer> _peerIdList;
     
     
-    public Worker(Socket socket, peerConfig configInfo, int selfId, int peerId){
+    public Worker(Socket socket, peerConfig configInfo, int selfId, int peerId, Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList){
         _socket = socket;
         _selfId = selfId;
         _peerId = peerId;
         _configInfo = configInfo;
+        _peerList = peerList;
+        _peerIdList = peerIdList;
     }
     
-    public Worker(Socket socket, peerConfig configInfo, int selfId){
+    public Worker(Socket socket, peerConfig configInfo, int selfId, Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList){
         _socket = socket;
         _selfId = selfId;
         _peerId = -1;
         _configInfo = configInfo;
+        _peerList = peerList;
+        _peerIdList = peerIdList;
     }
     
     public void setPeerId(int peerId){
@@ -82,38 +87,49 @@ public class Worker extends Thread{
             System.out.println("Info: Peer " +  _selfId + " sent handshake ack message to " + _peerId);
         }
         
-        // check and send bitfield messages
-        if(peerConfig.peerList.get(_selfId).hasCompleteFile()){
+        // check if we need to send bitfield message to our peer and send bitfield message
+        if(_peerList.get(_selfId).hasCompleteFile()){
             Message bfMsg = new Message();
             bfMsg.setType((byte)5);
-            byte[] bfPayload = peerConfig.peerList.get(_selfId).getBitfield().changeBitToByteField();
-            int bfLength = peerConfig.peerList.get(_selfId).getBitfield().getLengthInBytes();
+            byte[] bfPayload = _peerList.get(_selfId).getBitfield().changeBitToByteField();
+            int bfLength = _peerList.get(_selfId).getBitfield().getLengthInBytes();
             bfMsg.setPayload(bfPayload);
             bfMsg.setLength(bfLength);
             try{
                 bfMsg.sendMessage(_msgWriter);
-                System.out.println("Info: Peer " +  _selfId + " sent bitfiedl message to " + _peerId);
+                System.out.println("Info: Peer " +  _selfId + " sent bitfield message to " + _peerId);
             } catch(Exception e){
-                System.out.println("Error: Peer " +  _selfId + " not able to send bifield message to " + _peerId);
+                System.out.println("Error: Peer " +  _selfId + " not able to send bitfield message to " + _peerId);
             }
             
         }
         
-        try{
-            while(_msgReader.available() == 0){
-                Thread.sleep(5);
+        // check if we are expecting bitfield message from our peer and wait for the message and then set bitfield structure for that peer
+        if(_peerList.get(_peerId).getBitfield().getCountFinishedPieces() > 0){
+            try{
+                while(_msgReader.available() == 0){
+                    Thread.sleep(5);
+                }
+            }catch(Exception e){
+                System.out.println("Error: Waiting for msgReader. Message : " + e.getMessage());
             }
-        }catch(Exception e){
-            System.out.println("Error: Waiting for msgReader. Message : " + e.getMessage());
+            
+            
+            Message rcvMsg = new Message();
+            try{
+                rcvMsg.receiveMessage(_msgReader);
+                System.out.println("Info: Peer " +  _selfId + " received bitfield message from " + _peerId);
+                byte[] bfPayload = rcvMsg.getPayload();
+                _peerList.get(_peerId).getBitfield().setBitFromByte(bfPayload);
+            }catch(Exception e){
+                System.out.println("Error: Peer " +  _selfId + " not able to receive bitfield message from " + _peerId);
+            }
         }
         
-        
-        Message rcvMsg = new Message();
-        try{
-            rcvMsg.receiveMessage(_msgReader);
-            System.out.println("Info: Peer " +  _selfId + " received bitfiedl message from " + _peerId);
-        }catch(Exception e){
-            System.out.println("Error: Peer " +  _selfId + " not able to receive bifield message from " + _peerId);
+        // do this in a loop until both have complete file.
+        while(!_peerList.get(_selfId).hasCompleteFile() && !_peerList.get(_peerId).hasCompleteFile()){
+            // set preferred neighbours
+            
         }
         
     }

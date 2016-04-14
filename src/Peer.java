@@ -6,28 +6,29 @@ public class Peer {
     private Bitfield _bitfield;
     private boolean _isChoked;
     private boolean _isInterested;
+    private int _speed;
     
     public Peer(int totPieces){
         _id = 0;
         _hostname = "";
         _port = 0;
-        _hasCompleteFile = false;
         _bitfield = new Bitfield(totPieces);
         _isChoked = true;
         _isInterested = false;
+        _speed = 0;
     }
     
     public Peer(int id, String hostname, int port, boolean hasCompleteFile, int totPieces){
         _id = id;
         _hostname = hostname;
         _port = port;
-        _hasCompleteFile = hasCompleteFile;
         _bitfield = new Bitfield(totPieces);
         if(hasCompleteFile){
             _bitfield.setAllBitsTrue();
         }
         _isChoked = true;
         _isInterested = false;
+        _speed = 0;
     }
     
     public void setId(int id){
@@ -55,14 +56,13 @@ public class Peer {
     }
     
     public void setCompleteFile(boolean hasCompleteFile){
-        _hasCompleteFile = hasCompleteFile;
         if(hasCompleteFile){
             _bitfield.setAllBitsTrue();
         }
     }
     
     public boolean hasCompleteFile(){
-        return _hasCompleteFile;
+        return _bitfield.getFinished();
     }
     
     public void setBitfield(Bitfield bitfield){
@@ -87,5 +87,13 @@ public class Peer {
     
     public boolean isInterested(){
         return _isInterested;
+    }
+    
+    public void setSpeed(int speed){
+        _speed = speed;
+    }
+    
+    public int getSpeed(){
+        return _speed;
     }
 }

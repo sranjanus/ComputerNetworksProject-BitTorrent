@@ -26,19 +26,12 @@ public class peerConfig {
 //	private ArrayList<Integer> portList;
 //	private ArrayList<Boolean> hasWholeFile;
     public static int totalPeers;
-    public static Map<Integer, Peer> peerList;
-    public static ArrayList<Integer> peerIdList;
-    public static int firstPeerId;
-    public static int lastPeerId;
-    public static int selfIndex;
-    public static int selfID;
 	
-	public peerConfig(int selfId) throws Exception
+	public peerConfig(Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList) throws Exception
 	{
-        selfID = selfId;
         String path = System.getProperty("user.dir");
-		readCommonConfig(path + "/src/Common.cfg");
-		readPeerInfoConfig(path + "/src/PeerInfo.cfg");
+		readCommonConfig(path + "/Common.cfg");
+		readPeerInfoConfig(path + "/PeerInfo.cfg", peerList, peerIdList);
 	}
 	
 	public int getPrefNeighbors(){
@@ -71,9 +64,7 @@ public class peerConfig {
 	public int getTotalPeers(){
 		return totalPeers;
 	}
-	public Map<Integer, Peer> getPeerList(){
-		return peerList;
-	}
+    
 //	public ArrayList<String> getHostList(){
 //		return hostList;
 //	}
@@ -168,15 +159,15 @@ public class peerConfig {
 	 * This function reads the PeerInfo.cfg file and populates the corresponding variables
 	 * @param The path of the PeerInfo.cfg file
 	 */
-	public void readPeerInfoConfig(String peerConfigPath) throws Exception
+	public void readPeerInfoConfig(String peerConfigPath, Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList) throws Exception
 	{
 		try{
 //			peerList = new ArrayList<Integer>();
 //			hostList = new ArrayList<String>();
 //			portList = new ArrayList<Integer>();
 //			hasWholeFile = new ArrayList<Boolean>();
-            peerList = new HashMap<Integer, Peer>();
-            peerIdList = new ArrayList<Integer>();
+//          peerList = new HashMap<Integer, Peer>();
+//          peerIdList = new ArrayList<Integer>();
 			
 			in = new FileInputStream(peerConfigPath);
 			Scanner scanner = new Scanner(in);
@@ -184,7 +175,6 @@ public class peerConfig {
 			int tokenNum = 0;
 			int lineNum = 0;
 			int modResult;
-            int k = 0;
             
             Peer peer = null;
 			while(scanner.hasNext())
@@ -214,7 +204,6 @@ public class peerConfig {
          			   }
                        peerList.put(peer.getId(), peer);
                        peer = null;
-                       k++;
          		   }
          		   else
          			   throw new Exception("Error.  You must specify either a 0 or 1 to denote if the peer has the entire file.");
@@ -229,9 +218,6 @@ public class peerConfig {
                        int peerId = scanner.nextInt();
                        peer.setId(peerId);
                        peerIdList.add(peerId);
-                       if(peerId == selfID){
-                           selfIndex = k;
-                       }
          		   }
         		   else
         			   throw new Exception("Error.  You must specify the peer id as an integer.");
@@ -265,8 +251,6 @@ public class peerConfig {
 			if(in != null)
 				in.close();
             
-            firstPeerId = peerIdList.get(0);
-            lastPeerId = peerIdList.get(totalPeers - 1);
             //System.out.println("Debug: First Peer ID = " + firstPeerId + ", Last Peer Id = " + lastPeerId);
             
 		}
@@ -276,7 +260,7 @@ public class peerConfig {
 		}
         
         //debug
-        printPeerInfo();
+        //printPeerInfo();
 		
 	}
 	
@@ -290,29 +274,29 @@ public class peerConfig {
 	}
 	
 	// print info read from PeerInfo.cfg
-	public void printPeerInfo()
-	{
-		int i = 0;
-		
-		System.out.printf("\nTotal # peers: %d\n", totalPeers);
-		System.out.println("\nPeer List:");
-		
-		int wholeFile = 0;
-		
-		while(i < totalPeers)
-		{
-            Peer peer = peerList.get(peerIdList.get(i));
-            if(peer.hasCompleteFile() == true)
-				wholeFile = 1;
-			else
-				wholeFile = 0;
-			
-			System.out.printf("\nPeer #: %d  Host Name: %s  Port: %d "
-					+ "hasWholeFile: %d ", peer.getId(), peer.getHostname(),
-			peer.getPort(), wholeFile);
-			++i;
-		}
-	}
+//	public void printPeerInfo()
+//	{
+//		int i = 0;
+//		
+//		System.out.printf("\nTotal # peers: %d\n", totalPeers);
+//		System.out.println("\nPeer List:");
+//		
+//		int wholeFile = 0;
+//		
+//		while(i < totalPeers)
+//		{
+//            Peer peer = peerList.get(peerIdList.get(i));
+//            if(peer.hasCompleteFile() == true)
+//				wholeFile = 1;
+//			else
+//				wholeFile = 0;
+//			
+//			System.out.printf("\nPeer #: %d  Host Name: %s  Port: %d "
+//					+ "hasWholeFile: %d ", peer.getId(), peer.getHostname(),
+//			peer.getPort(), wholeFile);
+//			++i;
+//		}
+//	}
 	
 //	public int getPeerList(int id)
 //	{
