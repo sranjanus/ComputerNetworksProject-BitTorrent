@@ -3,7 +3,7 @@ import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/*@author Varun and Sharath
+/*@author Varun and Sarath
  * This class keeps track of the Pieces that are downloaded from the peers.
  * 
  */

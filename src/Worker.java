@@ -125,11 +125,17 @@ public class Worker extends Thread{
                 System.out.println("Error: Peer " +  _selfId + " not able to receive bitfield message from " + _peerId);
             }
         }
-        
         // do this in a loop until both have complete file.
         while(!_peerList.get(_selfId).hasCompleteFile() && !_peerList.get(_peerId).hasCompleteFile()){
             // set preferred neighbours
-            
+//            try{
+//                while(_msgReader.available() == 0){
+//                    Thread.sleep(5);
+//                }
+//            }catch(Exception e){
+//                System.out.println("Error: Waiting for msgReader. Message : " + e.getMessage());
+//            }
+
         }
         
     }

@@ -12,7 +12,7 @@ import java.util.Scanner;
 
 public class peerConfig {
 	private FileInputStream in = null;
-	private static int prefNeighbors;
+	private static int noOfprefNeighbors;
 	private static int timeUnchoke;
 	private static int timeOptUnchoke;
 	private static String fileName;
@@ -35,7 +35,7 @@ public class peerConfig {
 	}
 	
 	public int getPrefNeighbors(){
-		 return prefNeighbors;
+		 return noOfprefNeighbors;
 	}
 	public int getTotalPeersWithEntireFile(){
 		return totalPeersWithEntireFile;
@@ -95,7 +95,7 @@ public class peerConfig {
 					if(!scanner.hasNextInt())
 						throw new Exception("Error:  Integer value required for the number of preferred neighbors.");
 					else
-						prefNeighbors = scanner.nextInt();
+						noOfprefNeighbors = scanner.nextInt();
 				}
 				else if(token.compareToIgnoreCase("UnchokingInterval") == 0)
 				{
@@ -269,7 +269,7 @@ public class peerConfig {
 	{
 		System.out.printf("# Preferred neighbors: %d\nUnchoking Interval: %d\n"
 				+ "Optimistic Unchoking Interval: %d\n"
-				+ "File Name: %s\nFile size: %d\nPiece size: %d\n", prefNeighbors,
+				+ "File Name: %s\nFile size: %d\nPiece size: %d\n", noOfprefNeighbors,
 				timeUnchoke, timeOptUnchoke, fileName, sizeOfFile, sizeOfPiece);
 	}
 	

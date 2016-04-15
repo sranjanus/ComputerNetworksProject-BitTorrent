@@ -1,6 +1,8 @@
+import java.net.InterfaceAddress;
 import java.util.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.SynchronousQueue;
 
 public class peerProcess {
     public static int selfID;
@@ -10,8 +12,8 @@ public class peerProcess {
     public static int firstPeerId;
     public static int lastPeerId;
     public static int selfIndex;
-    public static Vector<Worker> workers = new Vector<>();
-    public static Vector<Thread> wThreads = new Vector<>();
+    public static Vector<Worker> workers = new Vector<Worker>();
+    public static Vector<Thread> wThreads = new Vector<Thread>();
     public static ArrayList<Integer> prefNeighbors;
     public static int optUnchokedNeighbor;
     public static loggerFile logfile;
@@ -130,6 +132,16 @@ public class peerProcess {
             currentTime = System.currentTimeMillis();
             if(currentTime - prevUnchokingTime > configInfo.getTimeUnchoke()*1000){
                 selectPrefNeighbours();
+                prevUnchokingTime = currentTime;
+            }
+            if(currentTime - prevOpUnchokingTime > configInfo.getTimeOptUnchoke()*1000) {
+                selectOptimisticNeighbour();
+                prevOpUnchokingTime = currentTime;
+            }
+            try {
+                Thread.sleep(100);
+            }catch (Exception e) {
+
             }
         }
         
@@ -164,6 +176,8 @@ public class peerProcess {
                 selfIndex = i;
             }
         }
+        selectPrefNeighbours();
+        selectOptimisticNeighbour();
         return true;
     }
     
@@ -229,9 +243,44 @@ public class peerProcess {
                 }
             }
         }
-        
+        for(Integer prefNeighbour : prefNeighbors) {
+            peerList.get(prefNeighbour).setChoked(false);
+        }
     }
-    
+    public static void selectOptimisticNeighbour() {
+        ArrayList<Integer> candidates = new ArrayList<Integer>();
+        for(int i = 0; i < peerIdList.size(); i++) {
+            if(peerIdList.get(i) != selfID) {
+                candidates.add(peerIdList.get(i));
+            }
+        }//All peer are candidates to become the optimistically unchoked Neighbour except self
+        if (prefNeighbors != null) {
+            for (int i = 0; i<prefNeighbors.size(); i++) {
+                for (int j = 0; j<candidates.size(); j++) {
+                    if (prefNeighbors.get(i)%1000-1 == candidates.get(j)) {
+                        candidates.remove(j);
+                        break;
+                    }
+                }
+            }
+        }//Optimistic Preferred neighbour should not be any of the preferred neighbour
+        for(Integer candidate : candidates) {
+            if(peerList.get(candidate).hasCompleteFile()) {
+                candidates.remove(candidate);
+            }
+        }//If a candidate has the complete file it is not considered for selecting the optmistcally unchoked neighbour
+
+        if(candidates.size() == 0) {
+            optUnchokedNeighbor = -1;
+        } else {
+            Random random = new Random();
+            random.setSeed(System.currentTimeMillis());
+           optUnchokedNeighbor = candidates.get(random.nextInt(candidates.size()));
+            peerList.get(optUnchokedNeighbor).setChoked(false);
+//            System.out.println(optUnchokedNeighbor);
+        }//select random candidate from the remaining candidates
+    }
+
     public static boolean allComplete(){
         boolean allComplete = true;
         for(int i = 0;i < peerIdList.size();i++){
