@@ -1,5 +1,5 @@
 /*
- * @author Sharath
+ * @author Sarath
  * This is the Piece class that has the information for each piece/chunk of the file
  */
 public class Piece {

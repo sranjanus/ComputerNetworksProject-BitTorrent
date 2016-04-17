@@ -52,7 +52,6 @@ public class Bitfield {
 		}
 		return result;
 	}
-	
 	/*This function sets the corresponding bit field from the byte array received
 	 * @param byte Array received from socket stream
 	 */

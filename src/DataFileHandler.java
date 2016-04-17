@@ -3,6 +3,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Map;
 import java.util.Vector;
 
 /*
@@ -17,16 +18,30 @@ public class DataFileHandler{
 	private RandomAccessFile filename;
 	private peerConfig fileConfig;
 	private Vector<Integer> noOfPiecesWritten;
-	
-	public DataFileHandler(int id, peerConfig fileConfig) throws FileNotFoundException {
+    Map<Integer, Peer> _peerList;
+
+
+    public DataFileHandler(int id, Map<Integer, Peer> peerList, peerConfig fileConfig) throws FileNotFoundException {
 		this.fileConfig = fileConfig;
-		String path = System.getProperty("user.home") + "/project/peer_" + id + "/";
-		File newFolder = new File(path);
-		//Create new directory if not present
-		if(!newFolder.exists()){
-			newFolder.mkdir();
-		}
-		this.filename = new RandomAccessFile(path + fileConfig.getFileName(), "rw");
+		_peerList = peerList;
+        String path = System.getProperty("user.dir") + "/src/peer_" + id + "/";
+        if(_peerList.get(id).hasCompleteFile()) {
+            File newFolder = new File(path);
+            //Create new directory if not present
+            if(!newFolder.exists()){
+                newFolder.mkdir();
+            }
+            this.filename = new RandomAccessFile(path + fileConfig.getFileName(), "rw");
+        } else {
+            File newFolder = new File(path);
+            boolean isDirectoryCreated = newFolder.mkdir();
+            if(! isDirectoryCreated) {
+                deleteDir(newFolder);
+                newFolder.mkdir();
+            }
+            this.filename = new RandomAccessFile(path + fileConfig.getFileName(), "rw");
+        }
+
 		noOfPiecesWritten = new Vector<Integer>();
 	}
 	/*
@@ -58,14 +73,14 @@ public class DataFileHandler{
 	/*
 	 * This function reads a piece from a file for unchoke
 	 */
-	public synchronized Piece readFile(int id) throws IOException{
+	public synchronized Piece readFile(int index) throws IOException{
 		int length;
 		//Get the total length of the piece
-		if(id == fileConfig.getTotalPieces() - 1)
+		if(index == fileConfig.getTotalPieces() - 1)
 			length = fileConfig.getSizeOfLastPiece();
 		else
 			length = fileConfig.getSizeOfPiece();
-		int offset = fileConfig.getSizeOfPiece() * id;
+		int offset = fileConfig.getSizeOfPiece() * index;
 		getFile().seek(offset); //Shifts the pointer to the desired location
 		byte[] pieceContent = new byte[length];
 		int i = 0;
@@ -74,7 +89,7 @@ public class DataFileHandler{
 			pieceContent[i] = t;
 			i++;
 		}
-		Piece p = new Piece(pieceContent, id);
+		Piece p = new Piece(pieceContent, index);
 		return p;
 	}
 	/*
@@ -99,6 +114,23 @@ public class DataFileHandler{
 			Piece p = new Piece(pieceContent, id);
 			return p;
 		}
+    /**
+     * Function to delete existing directory and its contents. This has to be done before starting the transfer.
+     *
+     */
+    public void deleteDir(File dir) {
+        File[] files = dir.listFiles();
+
+        for (File myFile: files) {
+            if (myFile.isDirectory()) {
+                deleteDir(myFile);
+            }
+            myFile.delete();
+
+        }
+    }
 }
+
+
 	 
 	

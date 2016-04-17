@@ -7,6 +7,7 @@ import java.util.concurrent.SynchronousQueue;
 public class peerProcess {
     public static int selfID;
     public static peerConfig configInfo;
+    public static DataFileHandler fileHandler;
     public static Map<Integer, Peer> peerList;
     public static ArrayList<Integer> peerIdList;
     public static int firstPeerId;
@@ -62,7 +63,7 @@ public class peerProcess {
                         requestSocket = new Socket(peerList.get(peerId).getHostname(), peerList.get(peerId).getPort());
                         logfile.connectedTo(peerId);
                         System.out.println("Info: Peer " + selfID + " is made TCP connection with Peer " + peerId);
-                        workers.add(new Worker(requestSocket, configInfo, selfID, peerId, peerList, peerIdList));
+                        workers.add(new Worker(requestSocket, configInfo, selfID, peerId, peerList, peerIdList,fileHandler));
                         Thread thread = new Thread(workers.lastElement());
                         wThreads.add(thread);
                     } catch(Exception e){
@@ -87,7 +88,7 @@ public class peerProcess {
                 try{
                     acceptSocket = listenSocket.accept();
                     System.out.println("Info: Peer " + selfID + " accepted connection request.");
-                    workers.add(new Worker(acceptSocket, configInfo, selfID, peerList, peerIdList));
+                    workers.add(new Worker(acceptSocket, configInfo, selfID, peerList, peerIdList,fileHandler));
                     Thread thread = new Thread(workers.lastElement());
                     wThreads.add(thread);
                 } catch(Exception e){
@@ -123,7 +124,7 @@ public class peerProcess {
         for(int i = 0;i < wThreads.size();i++){
             wThreads.elementAt(i).start();
         }
-        
+
         // select peferred neighbours and optimisitc neighbour in a loop after every unchoking and optimistically unchoking interval
         long prevUnchokingTime = System.currentTimeMillis();
         long prevOpUnchokingTime = prevUnchokingTime;
@@ -138,11 +139,11 @@ public class peerProcess {
                 selectOptimisticNeighbour();
                 prevOpUnchokingTime = currentTime;
             }
-            try {
-                Thread.sleep(100);
-            }catch (Exception e) {
+//            try {
+//                Thread.sleep(100);
+//            }catch (Exception e) {
 
-            }
+//            }
         }
         
         try{
@@ -176,6 +177,10 @@ public class peerProcess {
                 selfIndex = i;
             }
         }
+        /**
+         * Read the input file if it has the file otherwise create new folder
+         */
+        fileHandler = new DataFileHandler(selfID, peerList, configInfo);
         selectPrefNeighbours();
         selectOptimisticNeighbour();
         return true;
@@ -203,7 +208,7 @@ public class peerProcess {
         System.out.println("Info: Peer " + selfID + "is exiting!!");
     }
     
-    public static void selectPrefNeighbours(){
+    public  static void selectPrefNeighbours(){
         prefNeighbors = new ArrayList<Integer>();
         for(int i = 0;i < peerIdList.size();i++){
             int candidateId = peerIdList.get(i);
@@ -220,7 +225,7 @@ public class peerProcess {
             if(peerList.get(selfID).hasCompleteFile()){
                 Random rndm = new Random();
                 for(int i = 0;i < toRemove;i++){
-                    int indexToRemove = Math.abs(rndm.nextInt()*(prefNeighbors.size()-1));
+                    int indexToRemove = Math.abs(rndm.nextInt(prefNeighbors.size()-1));
                     prefNeighbors.remove(indexToRemove);
                 }
             } else { // sort the neighbours based on download rate and select top "peerConfig.prefNeighbors" candidates
@@ -275,7 +280,7 @@ public class peerProcess {
         } else {
             Random random = new Random();
             random.setSeed(System.currentTimeMillis());
-           optUnchokedNeighbor = candidates.get(random.nextInt(candidates.size()));
+           optUnchokedNeighbor = candidates.get(random.nextInt(candidates.size()-1));
             peerList.get(optUnchokedNeighbor).setChoked(false);
 //            System.out.println(optUnchokedNeighbor);
         }//select random candidate from the remaining candidates
