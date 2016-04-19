@@ -1,3 +1,4 @@
+import java.net.InterfaceAddress;
 import java.util.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -8,6 +9,7 @@ public class peerProcess {
     public static DataFileHandler fileHandler;
     public static Map<Integer, Peer> peerList;
     public static ArrayList<Integer> peerIdList;
+//    public static ArrayList<Boolean> interestedOrNotInterestedList;
     public static int firstPeerId;
     public static int lastPeerId;
     public static int selfIndex;
@@ -65,11 +67,10 @@ public class peerProcess {
                         Thread thread = new Thread(workers.lastElement());
                         wThreads.add(thread);
                     } catch(Exception e){
-                        System.out.println("Error: Peer " + selfID + " not able to make connection to Peer " + peerId);
+                        System.out.println("Error: Peer " + selfID + " not able to make connection to Peer " + peerId + " Error: " +e.getMessage());
                         try{
                             exit();
                         }catch(Exception e1){
-                            
                         }
                         
                         return;
@@ -128,6 +129,10 @@ public class peerProcess {
         long prevOpUnchokingTime = prevUnchokingTime;
         long currentTime;
         optUnchokedNeighbor = -1;
+
+        selectPrefNeighbors();
+        selectOptimisticNeighbor();
+
         while(!allComplete()){
             currentTime = System.currentTimeMillis();
             if(currentTime - prevUnchokingTime > configInfo.getTimeUnchoke()*1000){
@@ -157,6 +162,9 @@ public class peerProcess {
         }
         
         try{
+            for(int i = 0;i < workers.size();i++){
+                workers.get(i).checkSendHaveMessage();
+            }
             exit();
         }catch(Exception e){
             
@@ -191,6 +199,7 @@ public class peerProcess {
          * Read the input file if it has the file otherwise create new folder
          */
         fileHandler = new DataFileHandler(selfID, peerList, configInfo);
+
         return true;
     }
     
@@ -220,7 +229,7 @@ public class peerProcess {
         prefNeighbors = new ArrayList<Integer>();
         for(int i = 0;i < peerIdList.size();i++){
             int candidateId = peerIdList.get(i);
-            if(candidateId != selfID && !peerList.get(candidateId).hasCompleteFile()){
+            if(candidateId != selfID && !peerList.get(candidateId).hasCompleteFile() && peerList.get(candidateId).isInterested()){
                 prefNeighbors.add(peerIdList.get(i));
             }
         }
@@ -257,6 +266,15 @@ public class peerProcess {
                 }
             }
         }
+
+        /**
+         * Reset speed to zero after selecting the preferred neighbours
+         */
+
+        for(Map.Entry<Integer, Peer> peer : peerList.entrySet()) {
+            peer.getValue().resetSpeed();
+        }
+
     }
     public static void selectOptimisticNeighbor() {
         ArrayList<Integer> candidates = new ArrayList<Integer>();
@@ -270,7 +288,7 @@ public class peerProcess {
         if (prefNeighbors != null) {
             for (int i = 0; i<prefNeighbors.size(); i++) {
                 if(candidates.contains(prefNeighbors.get(i))){
-                    candidates.remove(i);
+                    candidates.remove(prefNeighbors.get(i));
                 }
             }
         }//Optimistic Preferred neighbour should not be any of the preferred neighbour
@@ -288,6 +306,8 @@ public class peerProcess {
         boolean allComplete = true;
         for(int i = 0;i < peerIdList.size();i++){
             allComplete = allComplete && peerList.get(peerIdList.get(i)).hasCompleteFile();
+            Bitfield bf = peerList.get(peerIdList.get(i)).getBitfield();
+            System.out.println(peerIdList.get(i) + "|" + bf.getCountFinishedPieces() + "|" + peerList.get(peerIdList.get(i)).hasCompleteFile() + "|" + allComplete);
         }
         return allComplete;
     }

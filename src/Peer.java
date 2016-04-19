@@ -57,6 +57,8 @@ public class Peer {
     public void setCompleteFile(boolean hasCompleteFile){
         if(hasCompleteFile){
             _bitfield.setAllBitsTrue();
+        } else {
+            _bitfield.setAllBitsFalse();
         }
     }
     
@@ -80,7 +82,7 @@ public class Peer {
         return _isChoked;
     }
     
-    public void setIntereted(boolean isInterested){
+    public void setInterested(boolean isInterested){
         _isInterested = isInterested;
     }
     
@@ -88,9 +90,11 @@ public class Peer {
         return _isInterested;
     }
     
-    public void setSpeed(int speed){
-        _speed = speed;
+    public void incrementSpeed(){
+        _speed = _speed + 1;
     }
+
+    public void resetSpeed() { _speed = 0; }
     
     public int getSpeed(){
         return _speed;

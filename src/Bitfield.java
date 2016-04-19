@@ -25,6 +25,7 @@ public class Bitfield {
 			bitPieceIndex[i] = new AtomicBoolean();
 			bitPieceIndex[i].set(false);
 		}
+		finished.set(false);
         noOfBytes = -1;
 	}
 	/*
@@ -138,6 +139,16 @@ public class Bitfield {
 		countFinishedPieces.set(totPieces);
 		finished.set(true);
 	}
+	/*
+	* This function sets all the fields to false
+	*/
+	public synchronized void setAllBitsFalse(){
+		for(int i = 0;i < totPieces;i++){
+			bitPieceIndex[i].set(false);
+		}
+		countFinishedPieces.set(0);
+		finished.set(false);
+	}
  
 	/*This function checks if the piece is present or not
 	 * 
@@ -173,6 +184,23 @@ public class Bitfield {
 			return randomPieces.get(counter);
 		}
 		return -1;
+	}
+	public synchronized Bitfield newlyAddedPiecesIndices(Bitfield bf) {
+		Bitfield newlyAddedPieces = new Bitfield(totPieces);
+		for (int i = 0; i< totPieces ; i++) {
+			if( (bitPieceIndex[i].get() == true) && (bf.bitPieceIndex[i].get() == false)) {
+				newlyAddedPieces.setBitToTrue(i);
+			}
+		}
+		return  newlyAddedPieces;
+	}
+
+	public synchronized  int getBit(int index){
+		if(bitPieceIndex[index].get() == false){
+			return 0;
+		} else {
+			return 1;
+		}
 	}
     
     public synchronized int getLengthInBytes(){

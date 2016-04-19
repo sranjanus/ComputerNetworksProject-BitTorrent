@@ -24,7 +24,7 @@ public class DataFileHandler{
     public DataFileHandler(int id, Map<Integer, Peer> peerList, peerConfig fileConfig) throws FileNotFoundException {
 		this.fileConfig = fileConfig;
 		_peerList = peerList;
-        String path = System.getProperty("user.dir") + "/src/peer_" + id + "/";
+        String path = System.getProperty("user.dir") + "/peer_" + id + "/";
         if(_peerList.get(id).hasCompleteFile()) {
             File newFolder = new File(path);
             //Create new directory if not present

@@ -30,8 +30,8 @@ public class peerConfig {
 	public peerConfig(Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList) throws Exception
 	{
         String path = System.getProperty("user.dir");
-		readCommonConfig(path + "/src/Common.cfg");
-		readPeerInfoConfig(path + "/src/PeerInfo.cfg", peerList, peerIdList);
+		readCommonConfig(path + "/Common.cfg");
+		readPeerInfoConfig(path + "/PeerInfo_org.cfg", peerList, peerIdList);
 	}
 
 	public int getPrefNeighbors(){
@@ -215,6 +215,7 @@ public class peerConfig {
             		   lineNum = (tokenNum-1)/4;	            		   
             		  // peerList.add(lineNum, scanner.nextInt());
                        peer = new Peer(totalPieces);
+					   peer.setInterested(false);
                        int peerId = scanner.nextInt();
                        peer.setId(peerId);
                        peerIdList.add(peerId);
