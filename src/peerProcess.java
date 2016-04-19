@@ -124,25 +124,37 @@ public class peerProcess {
         }
 
         // select peferred neighbours and optimisitc neighbour in a loop after every unchoking and optimistically unchoking interval
-//        long prevUnchokingTime = System.currentTimeMillis();
-//        long prevOpUnchokingTime = prevUnchokingTime;
-//        long currentTime;
-//        while(!allComplete()){
-//            currentTime = System.currentTimeMillis();
-//            if(currentTime - prevUnchokingTime > configInfo.getTimeUnchoke()*1000){
-//                selectPrefNeighbors();
-//                prevUnchokingTime = currentTime;
-//            }
-////            if(currentTime - prevOpUnchokingTime > configInfo.getTimeOptUnchoke()*1000) {
-////                selectOptimisticNeighbor();
-////                prevOpUnchokingTime = currentTime;
-////            }
-////            try {
-////                Thread.sleep(100);
-////            }catch (Exception e) {
-//
-////            }
-//        }
+        long prevUnchokingTime = System.currentTimeMillis();
+        long prevOpUnchokingTime = prevUnchokingTime;
+        long currentTime;
+        optUnchokedNeighbor = -1;
+        while(!allComplete()){
+            currentTime = System.currentTimeMillis();
+            if(currentTime - prevUnchokingTime > configInfo.getTimeUnchoke()*1000){
+                selectPrefNeighbors();
+                prevUnchokingTime = currentTime;
+            }
+            if(currentTime - prevOpUnchokingTime > configInfo.getTimeOptUnchoke()*1000) {
+                selectOptimisticNeighbor();
+                prevOpUnchokingTime = currentTime;
+            }
+            try {
+                Thread.sleep(100);
+            }catch (Exception e) {
+
+            }
+            
+            for(int i = 0;i < peerIdList.size(); i++){
+                if((prefNeighbors != null && prefNeighbors.contains(peerIdList.get(i))) || peerIdList.get(i) == optUnchokedNeighbor){
+                    peerList.get(peerIdList.get(i)).setChoked(false);
+                } else {
+                    peerList.get(peerIdList.get(i)).setChoked(true);
+                }
+            }
+            
+            //debug
+            //printUnchokedNeighbors();
+        }
         
         try{
             exit();
@@ -179,8 +191,6 @@ public class peerProcess {
          * Read the input file if it has the file otherwise create new folder
          */
         fileHandler = new DataFileHandler(selfID, peerList, configInfo);
-        //selectPrefNeighbors();
-        //selectOptimisticNeighbor();
         return true;
     }
     
@@ -228,60 +238,49 @@ public class peerProcess {
                 }
             }
             else { // sort the neighbours based on download rate and select top "peerConfig.prefNeighbors" candidates
-//                for(int i = 0;i < prefNeighbors.size();i++){
-//                    for(int j = 0;j < prefNeighbors.size() - i - 1;j++){
-//                        int id1 = prefNeighbors.get(j);
-//                        int id2 = prefNeighbors.get(j + 1);
-//                        int speed1 = peerList.get(id1).getSpeed();
-//                        int speed2 = peerList.get(id2).getSpeed();
-//                        if(speed2 > speed1){
-//                            prefNeighbors.set(j, id2);
-//                            prefNeighbors.set(j + 1, id1);
-//                        }
-//                    }
-//                }
+                for(int i = 0;i < prefNeighbors.size();i++){
+                    for(int j = 0;j < prefNeighbors.size() - i - 1;j++){
+                        int id1 = prefNeighbors.get(j);
+                        int id2 = prefNeighbors.get(j + 1);
+                        int speed1 = peerList.get(id1).getSpeed();
+                        int speed2 = peerList.get(id2).getSpeed();
+                        if(speed2 > speed1){
+                            prefNeighbors.set(j, id2);
+                            prefNeighbors.set(j + 1, id1);
+                        }
+                    }
+                }
 
-//                for(int i = prefNeighbors.size() - 1; toRemove != 0;i--){
-//                    prefNeighbors.remove(i);
-//                    toRemove--;
-//                }
+                for(int i = prefNeighbors.size() - 1; toRemove != 0;i--){
+                    prefNeighbors.remove(i);
+                    toRemove--;
+                }
             }
-        }
-        for(Integer prefNeighbour : prefNeighbors) {
-            peerList.get(prefNeighbour).setChoked(false);
         }
     }
     public static void selectOptimisticNeighbor() {
         ArrayList<Integer> candidates = new ArrayList<Integer>();
         for(int i = 0; i < peerIdList.size(); i++) {
-            if(peerIdList.get(i) != selfID) {
+            int candidateId = peerIdList.get(i);
+            if(candidateId != selfID && !peerList.get(candidateId).hasCompleteFile()) {
                 candidates.add(peerIdList.get(i));
             }
         }//All peer are candidates to become the optimistically unchoked Neighbour except self
+        
         if (prefNeighbors != null) {
             for (int i = 0; i<prefNeighbors.size(); i++) {
-                for (int j = 0; j<candidates.size(); j++) {
-                    if (prefNeighbors.get(i)%1000-1 == candidates.get(j)) {
-                        candidates.remove(j);
-                        break;
-                    }
+                if(candidates.contains(prefNeighbors.get(i))){
+                    candidates.remove(i);
                 }
             }
         }//Optimistic Preferred neighbour should not be any of the preferred neighbour
-        for(Integer candidate : candidates) {
-            if(peerList.get(candidate).hasCompleteFile()) {
-                candidates.remove(candidate);
-            }
-        }//If a candidate has the complete file it is not considered for selecting the optmistcally unchoked neighbour
 
         if(candidates.size() == 0) {
             optUnchokedNeighbor = -1;
         } else {
             Random random = new Random();
             random.setSeed(System.currentTimeMillis());
-           optUnchokedNeighbor = candidates.get(random.nextInt(candidates.size()-1));
-            peerList.get(optUnchokedNeighbor).setChoked(false);
-//            System.out.println(optUnchokedNeighbor);
+            optUnchokedNeighbor = candidates.get(random.nextInt(candidates.size()-1));
         }//select random candidate from the remaining candidates
     }
 
@@ -291,5 +290,12 @@ public class peerProcess {
             allComplete = allComplete && peerList.get(peerIdList.get(i)).hasCompleteFile();
         }
         return allComplete;
+    }
+    
+    // debug Functions
+    private static void printUnchokedNeighbors(){
+        for(int i = 0;i < peerIdList.size();i++){
+            System.out.println(peerIdList.get(i) + " is choked = " + peerList.get(peerIdList.get(i)).isChoked());
+        }
     }
 }
