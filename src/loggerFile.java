@@ -29,7 +29,7 @@ public class loggerFile
 		Date date = new Date();
 		this.logTime = new Timestamp(date.getTime());
 		
-		file = new File(System.getProperty("user.dir") + "/log_peer_"+ selfId +".log");
+		file = new File(System.getProperty("user.dir") + "/src/log_peer_"+ selfId +".log");
 		if(file.exists()) file.delete();
 		file.createNewFile();
 		
@@ -100,7 +100,7 @@ public class loggerFile
 		writeToFile(str);
 	}
 	
-	public synchronized void changeOfPreferredNeighbourLog(Vector<Integer> prefList)
+	public synchronized void changeOfPreferredNeighbourLog(ArrayList<Integer> prefList)
 	{
 		String peersArr = "";
 		for(int peer : prefList){
@@ -121,13 +121,13 @@ public class loggerFile
 	
 	public synchronized void unchokeLog(int peer_2)
 	{
-		String str = getTime() + ": Peer " + selfID + " is unchoked by the "+ peer_2 + ".\n";
+		String str = getTime() + ": Peer " + peer_2 + " is unchoked by the "+ selfID + ".\n";
 		writeToFile(str);
 	}
 	
 	public synchronized void chokeLog(int peer_2)
 	{
-		String str = getTime() + ": Peer " + selfID + " is choked by "+ peer_2 + ".\n";
+		String str = getTime() + ": Peer " + peer_2 + " is choked by "+ selfID + ".\n";
 		writeToFile(str);
 	}
 	

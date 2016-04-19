@@ -16,9 +16,10 @@ public class Worker extends Thread{
     ArrayList<Integer> _peerIdList;
     DataFileHandler _fileHandler;
     ArrayList<Integer> _newlyAddedPieces;
+    loggerFile _logFile;
 
 
-    public Worker(Socket socket, peerConfig configInfo, int selfId, int peerId, Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList, DataFileHandler fileHandler){
+    public Worker(Socket socket, peerConfig configInfo, int selfId, int peerId, Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList, DataFileHandler fileHandler, loggerFile logFile){
         _socket = socket;
         _selfId = selfId;
         _peerId = peerId;
@@ -30,9 +31,10 @@ public class Worker extends Thread{
         for(int i = 0 ; i < _configInfo.getTotalPieces() ; i ++) {
             _newlyAddedPieces.add(0);
         }
+        _logFile =logFile;
     }
 
-    public Worker(Socket socket, peerConfig configInfo, int selfId, Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList, DataFileHandler fileHandler){
+    public Worker(Socket socket, peerConfig configInfo, int selfId, Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList, DataFileHandler fileHandler, loggerFile logFile){
         _socket = socket;
         _selfId = selfId;
         _peerId = -1;
@@ -44,6 +46,7 @@ public class Worker extends Thread{
         for(int i = 0 ; i < _configInfo.getTotalPieces() ; i ++) {
             _newlyAddedPieces.add(0);
         }
+        _logFile = logFile;
     }
 
     public void setPeerId(int peerId){
@@ -175,7 +178,6 @@ public class Worker extends Thread{
         // -----------------------------------------------------------
 
         // do this in a loop until both have complete file.
-
         while(!_peerList.get(_selfId).hasCompleteFile() || !_peerList.get(_peerId).hasCompleteFile()){
             // set preferred neighbours
             /**
@@ -197,10 +199,9 @@ public class Worker extends Thread{
                     System.out.println("Info: Peer " +  _selfId + " is not able to send Choke message to " + _peerId);
 
                 }
-            } else {
+            } else if(! _peerList.get(_peerId).isChoked()) {
                 Message sendUnchokeMessage = new Message();
                 sendUnchokeMessage.setType(Message.unchoke);
-
                 try {
                     sendUnchokeMessage.sendMessage(_msgWriter);
                     //System.out.println("Info: Peer " +  _selfId + " sent Unchoke message to " + _peerId);
@@ -263,6 +264,7 @@ public class Worker extends Thread{
                 if(receivedMessageType == Message.interested) {
                     System.out.println("Info: Peer " + _selfId + " received Interested message from " + _peerId);
                     _peerList.get(_peerId).setInterested(true);
+                    _logFile.interestedLog(_peerId);
 
                 }
 
@@ -273,6 +275,7 @@ public class Worker extends Thread{
                 else if (receivedMessageType == Message.notInterested) {
                     System.out.println("Info: Peer " + _selfId + " received Not Interested message from " + _peerId);
                    _peerList.get(_peerId).setInterested(false);
+                    _logFile.notInterestedLog(_peerId);
                 }
 
                 /**
@@ -280,6 +283,7 @@ public class Worker extends Thread{
                  * which is present in that peer and not in self.
                  */
                 else if (receivedMessageType == Message.unchoke) {
+//                    _logFile.unchokeLog(_peerId);
                     System.out.println("Info: Peer " + _selfId + " received Unchoke message from " + _peerId);
                     int interestedPieceIndex = _peerList.get(_selfId).getBitfield().setInterestedPiece(_peerList.get(_peerId).getBitfield());
                     Message sendRequestMessage = new Message();
@@ -295,6 +299,12 @@ public class Worker extends Thread{
                     } catch (Exception e) {
                         System.out.println("Info: Peer " + _selfId + " is not able to send request message to " + _peerId);
                     }
+                }
+                /**
+                 * If the peer receives a choked message, Update the log and wait for an Unchoke
+                 */
+                else if (receivedMessageType == Message.choke) {
+//                    _logFile.chokeLog(_peerId);
                 }
 
                 /**
@@ -355,6 +365,7 @@ public class Worker extends Thread{
                      */
                     ByteArrayInputStream bis = new ByteArrayInputStream(pieceMessagePayload);
                     ObjectInput in = null;
+
                     try {
                         in = new ObjectInputStream(bis);
                         Object o = in.readObject();
@@ -373,6 +384,7 @@ public class Worker extends Thread{
                             // ignore close exception
                         }
                     }
+                    _logFile.downloadingLog(_peerId,piece.getPieceNum(),_peerList.get(_selfId).getBitfield().getCountFinishedPieces());
                     _fileHandler.writeFile(piece);
 
                     /**
@@ -393,6 +405,8 @@ public class Worker extends Thread{
 
                     byte []havePayload = receivedMessage.getPayload();
                     int index = bytetoInt.byteArrayToInt(havePayload);
+                    _logFile.haveLog(_peerId,index);
+
                     _peerList.get(_peerId).getBitfield().setBitToTrue(index);
                     if(_peerList.get(_selfId).getBitfield().checkPiecesInterested(_peerList.get(_peerId).getBitfield())) {
                         /**

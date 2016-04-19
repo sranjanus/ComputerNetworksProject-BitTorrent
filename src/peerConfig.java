@@ -30,8 +30,8 @@ public class peerConfig {
 	public peerConfig(Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList) throws Exception
 	{
         String path = System.getProperty("user.dir");
-		readCommonConfig(path + "/Common.cfg");
-		readPeerInfoConfig(path + "/PeerInfo_org.cfg", peerList, peerIdList);
+		readCommonConfig(path + "/src/Common.cfg");
+		readPeerInfoConfig(path + "/src/PeerInfo_org.cfg", peerList, peerIdList);
 	}
 
 	public int getPrefNeighbors(){

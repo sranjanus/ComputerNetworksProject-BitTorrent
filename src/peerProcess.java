@@ -63,7 +63,7 @@ public class peerProcess {
                         requestSocket = new Socket(peerList.get(peerId).getHostname(), peerList.get(peerId).getPort());
                         logfile.connectedTo(peerId);
                         System.out.println("Info: Peer " + selfID + " is made TCP connection with Peer " + peerId);
-                        workers.add(new Worker(requestSocket, configInfo, selfID, peerId, peerList, peerIdList,fileHandler));
+                        workers.add(new Worker(requestSocket, configInfo, selfID, peerId, peerList, peerIdList,fileHandler,logfile));
                         Thread thread = new Thread(workers.lastElement());
                         wThreads.add(thread);
                     } catch(Exception e){
@@ -87,7 +87,7 @@ public class peerProcess {
                 try{
                     acceptSocket = listenSocket.accept();
                     System.out.println("Info: Peer " + selfID + " accepted connection request.");
-                    workers.add(new Worker(acceptSocket, configInfo, selfID, peerList, peerIdList,fileHandler));
+                    workers.add(new Worker(acceptSocket, configInfo, selfID, peerList, peerIdList,fileHandler,logfile));
                     Thread thread = new Thread(workers.lastElement());
                     wThreads.add(thread);
                 } catch(Exception e){
@@ -204,6 +204,7 @@ public class peerProcess {
     }
     
     public static void exit() throws Exception {
+        logfile.completeDownloadLog();
         for(int i = 0;i < wThreads.size();i++){
             try{
                 wThreads.elementAt(i).join();
@@ -265,6 +266,7 @@ public class peerProcess {
                     toRemove--;
                 }
             }
+            logfile.changeOfPreferredNeighbourLog(prefNeighbors);
         }
 
         /**
@@ -300,6 +302,8 @@ public class peerProcess {
             random.setSeed(System.currentTimeMillis());
             optUnchokedNeighbor = candidates.get(random.nextInt(candidates.size()-1));
         }//select random candidate from the remaining candidates
+
+        logfile.changeOfOptUnchokedNeighbourLog(optUnchokedNeighbor);
     }
 
     public static boolean allComplete(){
