@@ -124,25 +124,25 @@ public class peerProcess {
         }
 
         // select peferred neighbours and optimisitc neighbour in a loop after every unchoking and optimistically unchoking interval
-        long prevUnchokingTime = System.currentTimeMillis();
-        long prevOpUnchokingTime = prevUnchokingTime;
-        long currentTime;
-        while(!allComplete()){
-            currentTime = System.currentTimeMillis();
-            if(currentTime - prevUnchokingTime > configInfo.getTimeUnchoke()*1000){
-                selectPrefNeighbors();
-                prevUnchokingTime = currentTime;
-            }
-//            if(currentTime - prevOpUnchokingTime > configInfo.getTimeOptUnchoke()*1000) {
-//                selectOptimisticNeighbor();
-//                prevOpUnchokingTime = currentTime;
+//        long prevUnchokingTime = System.currentTimeMillis();
+//        long prevOpUnchokingTime = prevUnchokingTime;
+//        long currentTime;
+//        while(!allComplete()){
+//            currentTime = System.currentTimeMillis();
+//            if(currentTime - prevUnchokingTime > configInfo.getTimeUnchoke()*1000){
+//                selectPrefNeighbors();
+//                prevUnchokingTime = currentTime;
 //            }
-//            try {
-//                Thread.sleep(100);
-//            }catch (Exception e) {
-
-//            }
-        }
+////            if(currentTime - prevOpUnchokingTime > configInfo.getTimeOptUnchoke()*1000) {
+////                selectOptimisticNeighbor();
+////                prevOpUnchokingTime = currentTime;
+////            }
+////            try {
+////                Thread.sleep(100);
+////            }catch (Exception e) {
+//
+////            }
+//        }
         
         try{
             exit();
@@ -179,7 +179,7 @@ public class peerProcess {
          * Read the input file if it has the file otherwise create new folder
          */
         fileHandler = new DataFileHandler(selfID, peerList, configInfo);
-        selectPrefNeighbors();
+        //selectPrefNeighbors();
         //selectOptimisticNeighbor();
         return true;
     }
