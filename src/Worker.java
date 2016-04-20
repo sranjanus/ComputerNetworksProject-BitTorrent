@@ -67,7 +67,7 @@ public class Worker extends Thread{
         }catch(IOException e){
             System.out.println("Error: Intialization of data stream failed! Message : " + e.getMessage());
             _peerList.get(_peerId).setExited(true);
-            System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+            System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
             return;
         }
 
@@ -85,7 +85,7 @@ public class Worker extends Thread{
             } catch(Exception e){
                 System.out.println("Error: Waiting for msgReader. Message : " + e.getMessage());
                 _peerList.get(_peerId).setExited(true);
-                System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                 return;
             }
 
@@ -101,7 +101,7 @@ public class Worker extends Thread{
                 }
             } catch(Exception e){
                 System.out.println("Error: Waiting for msgReader. Message : " + e.getMessage());
-                System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                 return;
             }
             hsMsg.receiveMessage(_socket);
@@ -129,7 +129,7 @@ public class Worker extends Thread{
             } catch(Exception e){
                 System.out.println("Error: Peer " +  _selfId + " not able to send bitfield message to " + _peerId + ". Message: " + e.getMessage());
                 _peerList.get(_peerId).setExited(true);
-                System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                 return;
             }
             for(int i = 0;i < _configInfo.getTotalPieces();i++){
@@ -146,7 +146,7 @@ public class Worker extends Thread{
             }catch(Exception e){
                 System.out.println("Error: Waiting for msgReader. Message : " + e.getMessage());
                 _peerList.get(_peerId).setExited(true);
-                System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                 return;
             }
 
@@ -170,9 +170,9 @@ public class Worker extends Thread{
                         sendinterestedMessage.sendMessage(_msgWriter);
                         System.out.println("Info: Peer " +  _selfId + " sent Interested message to " + _peerId);
                     }catch (Exception e) {
-                        System.out.println("Info: Peer " +  _selfId + " is not able to send Interested message to " + _peerId + ". Message: " + e.getMessage());
+                        System.out.println("Error: Peer " +  _selfId + " is not able to send Interested message to " + _peerId + ". Message: " + e.getMessage());
                         _peerList.get(_peerId).setExited(true);
-                        System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                        System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                         return;
 
                     }
@@ -184,9 +184,9 @@ public class Worker extends Thread{
                         sendNotInterestedMessage.sendMessage(_msgWriter);
                         System.out.println("Info: Peer " +  _selfId + " sent Not Interested message to " + _peerId);
                     }catch (Exception e) {
-                        System.out.println("Info: Peer " +  _selfId + " is not able to send Not Interested message to " + _peerId + ". Message: " + e.getMessage());
+                        System.out.println("Error: Peer " +  _selfId + " is not able to send Not Interested message to " + _peerId + ". Message: " + e.getMessage());
                         _peerList.get(_peerId).setExited(true);
-                        System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                        System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                         return;
                     }
                 }
@@ -194,7 +194,7 @@ public class Worker extends Thread{
             }catch(Exception e){
                 System.out.println("Error: Peer " +  _selfId + " not able to receive bitfield message from " + _peerId + ". Message: " + e.getMessage());
                 _peerList.get(_peerId).setExited(true);
-                System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                 return;
             }
         }
@@ -222,7 +222,7 @@ public class Worker extends Thread{
                     }catch (Exception e) {
                         System.out.println("Error: Peer " +  _selfId + " is not able to send Choke message to " + _peerId + ". Message: " + e.getMessage());
                         _peerList.get(_peerId).setExited(true);
-                        System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                        System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                         return;
                     }
                 } else {
@@ -234,7 +234,7 @@ public class Worker extends Thread{
                     }catch (Exception e) {
                         System.out.println("Error: Peer " +  _selfId + " is not able to send Unchoke message to " + _peerId + ". Message: " + e.getMessage());
                         _peerList.get(_peerId).setExited(true);
-                        System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                        System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                         return;
                     }
                 }
@@ -298,7 +298,7 @@ public class Worker extends Thread{
                                     } catch (Exception e) {
                                         System.out.println("Error: Peer " + _selfId + " is not able to send request message to " + _peerId + ". Message: " + e.getMessage());
                                         _peerList.get(_peerId).setExited(true);
-                                        System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                                        System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                                         return;
                                     }
                                 } else {
@@ -344,7 +344,7 @@ public class Worker extends Thread{
                                     } catch (IOException ex) {
                                         System.out.println("Error: IO Exception in sending request by " + _selfId + "to " + _peerId+ ". Message: " + ex.getMessage());
                                         _peerList.get(_peerId).setExited(true);
-                                        System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                                        System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                                         return;
                                     }
                                     try {
@@ -352,7 +352,7 @@ public class Worker extends Thread{
                                     } catch (IOException ex) {
                                         System.out.println("Error: IO Exception in sending request by " + _selfId + "to " + _peerId+ ". Message: " + ex.getMessage());
                                         _peerList.get(_peerId).setExited(true);
-                                        System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                                        System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                                         return;
                                     }
                                 }
@@ -364,7 +364,7 @@ public class Worker extends Thread{
                                 } catch (Exception e) {
                                     System.out.println("Error: Peer " + _selfId + " is not able to send piece message to " + _peerId + ". Message: " + e.getMessage());
                                     _peerList.get(_peerId).setExited(true);
-                                    System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                                    System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                                     return;
                                 }
                             }
@@ -394,7 +394,7 @@ public class Worker extends Thread{
                                     // ignore close exception
                                     System.out.println("Error: IO Exception in writing piece to file. Message: " + ex.getMessage());
                                     _peerList.get(_peerId).setExited(true);
-                                    System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                                    System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                                     return;
                                 }
                                 try {
@@ -405,7 +405,7 @@ public class Worker extends Thread{
                                     // ignore close exception
                                     System.out.println("Error: IO Exception in writing piece to file. Message: " + ex.getMessage());
                                     _peerList.get(_peerId).setExited(true);
-                                    System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                                    System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                                     return;
                                 }
                             }
@@ -436,7 +436,7 @@ public class Worker extends Thread{
                                 } catch (Exception e) {
                                     System.out.println("Error: Peer " + _selfId + " is not able to send request message to " + _peerId + ". Message: " + e.getMessage());
                                     _peerList.get(_peerId).setExited(true);
-                                    System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                                    System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                                     return;
                                 }
                             } else {
@@ -469,7 +469,7 @@ public class Worker extends Thread{
                                 }catch (Exception e) {
                                     System.out.println("Error: Peer " +  _selfId + " is not able to send Interested message to " + _peerId + ". Message: " + e.getMessage());
                                     _peerList.get(_peerId).setExited(true);
-                                    System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                                    System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                                     return;
         
                                 }
@@ -483,7 +483,7 @@ public class Worker extends Thread{
                                 }catch (Exception e) {
                                     System.out.println("Error: Peer " +  _selfId + " is not able to send Not Interested message to " + _peerId + ". Message: " + e.getMessage());
                                     _peerList.get(_peerId).setExited(true);
-                                    System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                                    System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                                     return;
                                 }
                             }
@@ -493,7 +493,7 @@ public class Worker extends Thread{
                     }catch (Exception e) {
                         System.out.println("Error: Peer " + _selfId + " not able to receive message from " + _peerId + ". Message: " + e.getMessage());
                         _peerList.get(_peerId).setExited(true);
-                        System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                        System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                         return;
                     }
                 }
@@ -517,7 +517,7 @@ public class Worker extends Thread{
                         } catch (Exception e) {
                             System.out.println("Error: Peer " + _selfId + " is not able to send have message to " + _peerId + ". Message: " + e.getMessage());
                             _peerList.get(_peerId).setExited(true);
-                            System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                            System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                             return;
                         }
                         _newlyAddedPieces.set(i, 1);
@@ -526,7 +526,7 @@ public class Worker extends Thread{
             }catch(Exception e1){
                 System.out.println("Error: Checking msgReader for incoming message. Message : " + e1.getMessage());
                 _peerList.get(_peerId).setExited(true);
-                System.out.println("Exiting the thread between " + _selfId + " and " + _peerId);
+                System.out.println("Info: Exiting the thread between " + _selfId + " and " + _peerId);
                 return;
             }
         }
