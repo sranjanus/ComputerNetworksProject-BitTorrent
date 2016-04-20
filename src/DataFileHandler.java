@@ -44,6 +44,8 @@ public class DataFileHandler{
 
 		noOfPiecesWritten = new Vector<Integer>();
 	}
+    
+    
 	/*
 	 * This function returns the file pointer to close the file 
 	 */
@@ -127,6 +129,18 @@ public class DataFileHandler{
             }
             myFile.delete();
 
+        }
+    }
+    
+    /**
+     *Function to close the file
+     *
+     */
+    public void closeFile(){
+        try{
+            this.filename.close();
+        } catch(IOException e){
+            System.out.println("Error: IO Exception file closing data file. Message: " + e.getMessage());
         }
     }
 }

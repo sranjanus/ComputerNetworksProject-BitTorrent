@@ -32,11 +32,8 @@ public class peerProcess {
                 return;
             }
         } catch(Exception e){
-            
+            System.out.println("Error: In Initialization. Message: " + e.getMessage());
         }
-        
-        //Debug
-        //debugPrintPeerList();
         
         // Establish TCP Connections.
         
@@ -61,7 +58,6 @@ public class peerProcess {
                         logfile.makesTCPConnection(peerId);
                         System.out.println("Info: Peer " + selfID + " is making TCP connection with Peer " + peerId);
                         requestSocket = new Socket(peerList.get(peerId).getHostname(), peerList.get(peerId).getPort());
-                        logfile.connectedTo(peerId);
                         System.out.println("Info: Peer " + selfID + " is made TCP connection with Peer " + peerId);
                         workers.add(new Worker(requestSocket, configInfo, selfID, peerId, peerList, peerIdList,fileHandler,logfile));
                         Thread thread = new Thread(workers.lastElement());
@@ -69,10 +65,9 @@ public class peerProcess {
                     } catch(Exception e){
                         System.out.println("Error: Peer " + selfID + " not able to make connection to Peer " + peerId + " Error: " +e.getMessage());
                         try{
-                            System.out.println("Debug: This exit is in request socket!!");
                             exit();
                         }catch(Exception e1){
-                            
+                            System.out.println("Error: While exiting. Message: " + e1.getMessage());
                         }
                         
                         return;
@@ -93,12 +88,11 @@ public class peerProcess {
                     Thread thread = new Thread(workers.lastElement());
                     wThreads.add(thread);
                 } catch(Exception e){
-                    System.out.println("Error: Peer " + selfID + " not able to receieve requests");
+                    System.out.println("Error: Peer " + selfID + " not able to receieve requests. Message: " + e.getMessage());
                     try{
-                        System.out.println("Debug: This exit is in listen socket!!");
                         exit();
                     }catch(Exception e1){
-                        
+                        System.out.println("Error: While exiting. Message: " + e1.getMessage());
                     }
                     return;
                 }
@@ -107,10 +101,9 @@ public class peerProcess {
             
             if(waitCount > 0){
                 try{
-                    System.out.println("Debug: This exit is in wait count check");
                     exit();
                 }catch(Exception e){
-                    
+                    System.out.println("Error: While exiting. Message: " + e.getMessage());
                 }
                 return;
             }
@@ -121,11 +114,8 @@ public class peerProcess {
         try{
             listenSocket.close();
         } catch(Exception e){
-            
+            System.out.println("Error: Not able to close listen socket. Message: " + e.getMessage());
         }
-        
-        selectPrefNeighbors();
-        selectOptimisticNeighbor();
         
         for(int i = 0;i < wThreads.size();i++){
             wThreads.elementAt(i).start();
@@ -138,7 +128,6 @@ public class peerProcess {
         optUnchokedNeighbor = -1;
 
         while(!allComplete()){
-            //System.out.println("Debug: Inside the peer process loop");
             currentTime = System.currentTimeMillis();
             if(currentTime - prevUnchokingTime > configInfo.getTimeUnchoke()*1000){
                 selectPrefNeighbors();
@@ -154,29 +143,13 @@ public class peerProcess {
                 System.out.println("Error: In Thread Sleeping! Message: " + e.getMessage());
             }
             
-            for(int i = 0;i < peerIdList.size(); i++){
-                //System.out.println("Debug: Choking/Unchoking neighbors");
-                if((prefNeighbors != null && prefNeighbors.contains(peerIdList.get(i))) || peerIdList.get(i) == optUnchokedNeighbor){
-                    peerList.get(peerIdList.get(i)).setChoked(false);
-                } else {
-                    peerList.get(peerIdList.get(i)).setChoked(true);
-                }
-            }
-            //debug
-            //printUnchokedNeighbors();
+            setChokedUnchoked();
         }
         
-        System.out.println("Debug: Just before entering the try for exiting");
         try{
-//            System.out.println("Sending final have messages, Process : " + selfID);
-//            for(int i = 0;i < workers.size();i++){
-//                System.out.println("Calling check send have message for all the threads!!");
-//                workers.get(i).checkSendHaveMessage();
-//                workers.get(i).terminate();
-//            }
             exit();
         }catch(Exception e){
-            
+            System.out.println("Error: While exiting. Message: " + e.getMessage());
         }
         return;
     }
@@ -213,31 +186,31 @@ public class peerProcess {
     }
     
     public static void exit() throws Exception {
-        System.out.println("Exiting!!!!!!!");
-        logfile.completeDownloadLog();
+        //terminate the threads
         for(int i = 0;i < wThreads.size();i++){
             try{
                 wThreads.elementAt(i).join();
             } catch(Exception e){
-                
+                System.out.println("Error: In Thread Join. Message: " + e.getMessage());
             }
         }
         
-        // close logfile
+        // close data file handles
+        fileHandler.closeFile();
         
+        // close logfile
         for(int i = 0;i < workers.size();i++){
             try{
                 workers.elementAt(i)._socket.close();
             } catch(Exception e){
-                
+                System.out.println("Error: While closing thread sockets. Message: " + e.getMessage());
             }
         }
         
-        System.out.println("Info: Peer " + selfID + "is exiting!!");
+        System.out.println("Info: Peer " + selfID + " is exiting!!");
     }
     
     public  static void selectPrefNeighbors(){
-        System.out.println("Debug : Select Preferered Neighbor called");
         prefNeighbors = new ArrayList<Integer>();
         for(int i = 0;i < peerIdList.size();i++){
             int candidateId = peerIdList.get(i);
@@ -281,8 +254,8 @@ public class peerProcess {
                     toRemove--;
                 }
             }
-            //logfile.changeOfPreferredNeighbourLog(prefNeighbors);
         }
+        logfile.changeOfPreferredNeighbourLog(prefNeighbors);
 
         /**
          * Reset speed to zero after selecting the preferred neighbours
@@ -290,11 +263,10 @@ public class peerProcess {
 
         for(Map.Entry<Integer, Peer> peer : peerList.entrySet()) {
             peer.getValue().resetSpeed();
-        }
+        };
 
     }
     public static void selectOptimisticNeighbor() {
-        //System.out.println("Debug : Select Optimistic Neighbor called");
         ArrayList<Integer> candidates = new ArrayList<Integer>();
         for(int i = 0; i < peerIdList.size(); i++) {
             int candidateId = peerIdList.get(i);
@@ -323,22 +295,37 @@ public class peerProcess {
 
         logfile.changeOfOptUnchokedNeighbourLog(optUnchokedNeighbor);
     }
+    
+    public static void setChokedUnchoked(){
+        for(int i = 0;i < peerIdList.size(); i++){
+            if((prefNeighbors != null && prefNeighbors.contains(peerIdList.get(i))) || peerIdList.get(i) == optUnchokedNeighbor){
+                peerList.get(peerIdList.get(i)).setChoked(false);
+            } else {
+                peerList.get(peerIdList.get(i)).setChoked(true);
+            }
+        }
+    }
 
     public static boolean allComplete(){
-        //System.out.println("Debug: all Complete called");
         boolean allComplete = true;
         for(int i = 0;i < peerIdList.size();i++){
             allComplete = allComplete && peerList.get(peerIdList.get(i)).hasCompleteFile();
-            Bitfield bf = peerList.get(peerIdList.get(i)).getBitfield();
-            System.out.println(peerIdList.get(i) + "|" + bf.getCountFinishedPieces() + "|" + peerList.get(peerIdList.get(i)).hasCompleteFile() + "|" + allComplete);
         }
         return allComplete;
     }
     
     // debug Functions
-    private static void printUnchokedNeighbors(){
-        for(int i = 0;i < peerIdList.size();i++){
-            System.out.println(peerIdList.get(i) + " is choked = " + peerList.get(peerIdList.get(i)).isChoked());
+    private static void printSelectedNeighbors(){
+        for(int i = 0;i < prefNeighbors.size();i++){
+            System.out.println(prefNeighbors.get(i));
         }
+    }
+    
+    private static void printSpeeds(){
+        System.out.print("Speeds : ");
+        for(int i = 0;i < peerIdList.size();i++){
+            System.out.print(peerList.get(peerIdList.get(i)).getSpeed() + "|");
+        }
+        System.out.println(" ");
     }
 }
