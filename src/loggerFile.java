@@ -29,7 +29,7 @@ public class loggerFile
 		Date date = new Date();
 		this.logTime = new Timestamp(date.getTime());
 		
-		file = new File(System.getProperty("user.dir") + "/src/log_peer_"+ selfId +".log");
+		file = new File(System.getProperty("user.dir") + "/log_peer_"+ selfId +".log");
 		if(file.exists()) file.delete();
 		file.createNewFile();
 		

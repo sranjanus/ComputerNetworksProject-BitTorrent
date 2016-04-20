@@ -17,7 +17,8 @@ public class Worker extends Thread{
     DataFileHandler _fileHandler;
     ArrayList<Integer> _newlyAddedPieces;
     loggerFile _logFile;
-
+    boolean _prevChokedStatus;
+    boolean _isFirstTimeCheck;
 
     public Worker(Socket socket, peerConfig configInfo, int selfId, int peerId, Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList, DataFileHandler fileHandler, loggerFile logFile){
         _socket = socket;
@@ -32,6 +33,9 @@ public class Worker extends Thread{
             _newlyAddedPieces.add(0);
         }
         _logFile =logFile;
+        _prevChokedStatus = true;
+        _isFirstTimeCheck = true;
+        
     }
 
     public Worker(Socket socket, peerConfig configInfo, int selfId, Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList, DataFileHandler fileHandler, loggerFile logFile){
@@ -47,6 +51,8 @@ public class Worker extends Thread{
             _newlyAddedPieces.add(0);
         }
         _logFile = logFile;
+        _prevChokedStatus = true;
+        _isFirstTimeCheck = true;
     }
 
     public void setPeerId(int peerId){
@@ -69,7 +75,7 @@ public class Worker extends Thread{
         if(_peerId != -1){
             hsMsg.setPeerID(_selfId);
             hsMsg.sendMessage(_socket);
-            System.out.println("Info: Peer " +  _selfId + " sent handshake message to " + _peerId);
+            //System.out.println("Info: Peer " +  _selfId + " sent handshake message to " + _peerId);
 
             try{
                 while(_msgReader.available() == 0){
@@ -82,7 +88,7 @@ public class Worker extends Thread{
             hsMsg.receiveMessage(_socket);
             _peerId = hsMsg.getPeerID();
 
-            System.out.println("Info: Peer " +  _selfId + " received handshake ack message from " + _peerId);
+            //System.out.println("Info: Peer " +  _selfId + " received handshake ack message from " + _peerId);
 
         } else { // wait for handshake message from peer and send acknowledgment
             try{
@@ -94,12 +100,12 @@ public class Worker extends Thread{
             }
             hsMsg.receiveMessage(_socket);
             _peerId = hsMsg.getPeerID();
-            System.out.println("Info: Peer " +  _selfId + " received handshake message from " + _peerId);
+            //System.out.println("Info: Peer " +  _selfId + " received handshake message from " + _peerId);
 
             hsMsg.setPeerID(_selfId);
             hsMsg.sendMessage(_socket);
 
-            System.out.println("Info: Peer " +  _selfId + " sent handshake ack message to " + _peerId);
+            //System.out.println("Info: Peer " +  _selfId + " sent handshake ack message to " + _peerId);
         }
 
         // check if we need to send bitfield message to our peer and send bitfield message
@@ -112,7 +118,7 @@ public class Worker extends Thread{
             sendBitfieldMessage.setLength(bfLength);
             try{
                 sendBitfieldMessage.sendMessage(_msgWriter);
-                System.out.println("Info: Peer " +  _selfId + " sent bitfield message to " + _peerId);
+                //System.out.println("Info: Peer " +  _selfId + " sent bitfield message to " + _peerId);
             } catch(Exception e){
                 System.out.println("Error: Peer " +  _selfId + " not able to send bitfield message to " + _peerId);
             }
@@ -135,7 +141,7 @@ public class Worker extends Thread{
             Message receiveBitfieldMessage = new Message();
             try{
                 receiveBitfieldMessage.receiveMessage(_msgReader);
-                System.out.println("Info: Peer " +  _selfId + " received bitfield message from " + _peerId);
+                //System.out.println("Info: Peer " +  _selfId + " received bitfield message from " + _peerId);
                 byte[] bfPayload = receiveBitfieldMessage.getPayload();
                 _peerList.get(_peerId).getBitfield().setBitFromByte(bfPayload);
 
@@ -149,7 +155,7 @@ public class Worker extends Thread{
                     //TODO: length and payload for the interested message
                     try {
                         sendinterestedMessage.sendMessage(_msgWriter);
-                        System.out.println("Info: Peer " +  _selfId + " send Interested message to " + _peerId);
+                        //System.out.println("Info: Peer " +  _selfId + " send Interested message to " + _peerId);
                     }catch (Exception e) {
                         System.out.println("Info: Peer " +  _selfId + " is not able to send Interested message to " + _peerId);
 
@@ -160,7 +166,7 @@ public class Worker extends Thread{
                     //TODO: length and payload for the interested message
                     try {
                         sendNotInterestedMessage.sendMessage(_msgWriter);
-                        System.out.println("Info: Peer " +  _selfId + " send Not Interested message to " + _peerId);
+                        //System.out.println("Info: Peer " +  _selfId + " send Not Interested message to " + _peerId);
                     }catch (Exception e) {
                         System.out.println("Info: Peer " +  _selfId + " is not able to send Not Interested message to " + _peerId);
 
@@ -185,32 +191,36 @@ public class Worker extends Thread{
              */
 
             //System.out.println("Entered while loop of Thread between Self: " +_selfId + " and Peer: " +_peerId);
-
-            if(_peerList.get(_peerId).isChoked()) {
-                Message sendChokeMessage = new Message();
-                sendChokeMessage.setType(Message.choke);
-
-                try {
-                    sendChokeMessage.sendMessage(_msgWriter);
-                    //System.out.println("Info: Peer " +  _selfId + " sent Choke message to " + _peerId);
-
-
-                }catch (Exception e) {
-                    System.out.println("Info: Peer " +  _selfId + " is not able to send Choke message to " + _peerId);
-
+//            if(_isFirstTimeCheck || (_peerList.get(_peerId).isChoked() != _prevChokedStatus)){
+                if(_peerList.get(_peerId).isChoked()) {
+                    Message sendChokeMessage = new Message();
+                    sendChokeMessage.setType(Message.choke);
+                    
+                    try {
+                        sendChokeMessage.sendMessage(_msgWriter);
+                        //System.out.println("Info: Peer " +  _selfId + " sent Choke message to " + _peerId);
+                        
+                        
+                    }catch (Exception e) {
+                        System.out.println("Error: Peer " +  _selfId + " is not able to send Choke message to " + _peerId);
+                        
+                    }
+                } else {
+                    Message sendUnchokeMessage = new Message();
+                    sendUnchokeMessage.setType(Message.unchoke);
+                    try {
+                        sendUnchokeMessage.sendMessage(_msgWriter);
+                        //System.out.println("Info: Peer " +  _selfId + " sent Unchoke message to " + _peerId);
+                        
+                        
+                    }catch (Exception e) {
+                        System.out.println("Error: Peer " +  _selfId + " is not able to send Unchoke message to " + _peerId);
+                    }
                 }
-            } else if(! _peerList.get(_peerId).isChoked()) {
-                Message sendUnchokeMessage = new Message();
-                sendUnchokeMessage.setType(Message.unchoke);
-                try {
-                    sendUnchokeMessage.sendMessage(_msgWriter);
-                    //System.out.println("Info: Peer " +  _selfId + " sent Unchoke message to " + _peerId);
-
-
-                }catch (Exception e) {
-                    System.out.println("Info: Peer " +  _selfId + " is not able to send Unchoke message to " + _peerId);
-                }
-            }
+  //              _prevChokedStatus = _peerList.get(_peerId).isChoked();
+  //              _isFirstTimeCheck = false;
+ //           }
+            
 //            try {
 //                Thread.sleep(100000);
 //                //TODO: for debugging
@@ -218,33 +228,11 @@ public class Worker extends Thread{
 //            }catch (Exception e) {
 //
 //            }
-            /**
-             * At each Iteration of the loop, each peer finds the newly added pieces and send have messages to the other threads.
-             * Original have message is being send to only one peer which actually send the piece to self.
-             */
-
-            printHaveArray();
-            for(int i = 0 ; i < _configInfo.getTotalPieces(); i++) {
-                if(_newlyAddedPieces.get(i) == 0 && _peerList.get(_selfId).getBitfield().getBit(i) == 1) {
-                    Message sendHaveMessageToOtherPeers = new Message();
-                    sendHaveMessageToOtherPeers.setType(Message.have);
-                    byte[] havePayload = bytetoInt.intToByteArray(i);
-                    sendHaveMessageToOtherPeers.setPayload(havePayload);
-                    sendHaveMessageToOtherPeers.setLength(havePayload.length);
-                    try {
-                        sendHaveMessageToOtherPeers.sendMessage(_msgWriter);
-                        System.out.println("Info: Peer " +  _selfId + " sent have message to " + _peerId);
-
-                    } catch (Exception e) {
-                        System.out.println("Info: Peer " + _selfId + " is not able to send have message to " + _peerId);
-                    }
-                    _newlyAddedPieces.set(i, 1);
-                }
-            }
 
             Message receivedMessage = new Message();
             try{
                 while(_msgReader.available() == 0){
+                    //System.out.println(_selfId + " is waiting for message from " + _peerId);
                     Thread.sleep(5);
                 }
             }catch(Exception e){
@@ -262,7 +250,7 @@ public class Worker extends Thread{
                  * TODO: This is just for debugging . Actually, compute preferred neighnours and then send Unchoke
                  */
                 if(receivedMessageType == Message.interested) {
-                    System.out.println("Info: Peer " + _selfId + " received Interested message from " + _peerId);
+                    //System.out.println("Info: Peer " + _selfId + " received Interested message from " + _peerId);
                     _peerList.get(_peerId).setInterested(true);
                     _logFile.interestedLog(_peerId);
 
@@ -273,7 +261,7 @@ public class Worker extends Thread{
                  * piece from that peer and send request message.
                  */
                 else if (receivedMessageType == Message.notInterested) {
-                    System.out.println("Info: Peer " + _selfId + " received Not Interested message from " + _peerId);
+                    //System.out.println("Info: Peer " + _selfId + " received Not Interested message from " + _peerId);
                    _peerList.get(_peerId).setInterested(false);
                     _logFile.notInterestedLog(_peerId);
                 }
@@ -284,21 +272,26 @@ public class Worker extends Thread{
                  */
                 else if (receivedMessageType == Message.unchoke) {
 //                    _logFile.unchokeLog(_peerId);
-                    System.out.println("Info: Peer " + _selfId + " received Unchoke message from " + _peerId);
+                    //System.out.println("Info: Peer " + _selfId + " received Unchoke message from " + _peerId);
                     int interestedPieceIndex = _peerList.get(_selfId).getBitfield().setInterestedPiece(_peerList.get(_peerId).getBitfield());
-                    Message sendRequestMessage = new Message();
-                    sendRequestMessage.setType(Message.request);
-                    byte[] payload = bytetoInt.intToByteArray(interestedPieceIndex);
-                    sendRequestMessage.setPayload(payload);
-                    sendRequestMessage.setLength(payload.length);
-
-                    try {
-                        sendRequestMessage.sendMessage(_msgWriter);
-                        System.out.println("Info: Peer " +  _selfId + " send request message to " + _peerId);
-
-                    } catch (Exception e) {
-                        System.out.println("Info: Peer " + _selfId + " is not able to send request message to " + _peerId);
+                    if(interestedPieceIndex != -1){
+                        Message sendRequestMessage = new Message();
+                        sendRequestMessage.setType(Message.request);
+                        byte[] payload = bytetoInt.intToByteArray(interestedPieceIndex);
+                        sendRequestMessage.setPayload(payload);
+                        sendRequestMessage.setLength(payload.length);
+                        
+                        try {
+                            sendRequestMessage.sendMessage(_msgWriter);
+                            //System.out.println("Info: Peer " +  _selfId + " send request message to " + _peerId);
+                            
+                        } catch (Exception e) {
+                            System.out.println("Error: Peer " + _selfId + " is not able to send request message to " + _peerId);
+                        }
+                    } else {
+                        //System.out.println("Error: Interested Piece Index out of bound (-1).");
                     }
+
                 }
                 /**
                  * If the peer receives a choked message, Update the log and wait for an Unchoke
@@ -311,7 +304,7 @@ public class Worker extends Thread{
                  * If a request message is received with a piece index, the corresponding message needs to be send to the peer in a 'piece' message
                  */
                 else if(receivedMessageType == Message.request) {
-                    System.out.println("Info: Peer " + _selfId + " received request message from " + _peerId);
+                    //System.out.println("Info: Peer " + _selfId + " received request message from " + _peerId);
                     byte []requestMessagePayload = receivedMessage.getPayload();
                     int requestedpieceIndex = bytetoInt.byteArrayToInt(requestMessagePayload);
                     Piece piece = _fileHandler.readFile(requestedpieceIndex);
@@ -335,21 +328,21 @@ public class Worker extends Thread{
                                 out.close();
                             }
                         } catch (IOException ex) {
-                            // ignore close exception
+                            System.out.println("Error: IO Exception in sending request. Message: " + ex.getMessage());
                         }
                         try {
                             bos.close();
                         } catch (IOException ex) {
-                            // ignore close exception
+                           System.out.println("Error: IO Exception in sending request. Message: " + ex.getMessage());
                         }
                     }
 
                     try {
                         sendPieceMessage.sendMessage(_msgWriter);
-                        System.out.println("Info: Peer " +  _selfId + " send piece message to " + _peerId);
+                        //System.out.println("Info: Peer " +  _selfId + " send piece message to " + _peerId);
 
                     } catch (Exception e) {
-                        System.out.println("Info: Peer " + _selfId + " is not able to send Piece message to " + _peerId);
+                        //System.out.println("Info: Peer " + _selfId + " is not able to send Piece message to " + _peerId);
                     }
                 }
                 /**
@@ -357,7 +350,7 @@ public class Worker extends Thread{
                  */
 
                 else if(receivedMessageType == Message.piece) {
-                    System.out.println("Info: Peer " + _selfId + " received piece message from " + _peerId);
+                    //System.out.println("Info: Peer " + _selfId + " received piece message from " + _peerId);
                     byte []pieceMessagePayload = receivedMessage.getPayload();
                     Piece piece = null;
                     /**
@@ -375,6 +368,7 @@ public class Worker extends Thread{
                             bis.close();
                         } catch (IOException ex) {
                             // ignore close exception
+                            System.out.println("Error: IO Exception in writing piece to file. Message: " + ex.getMessage());
                         }
                         try {
                             if (in != null) {
@@ -382,6 +376,7 @@ public class Worker extends Thread{
                             }
                         } catch (IOException ex) {
                             // ignore close exception
+                            System.out.println("Error: IO Exception in writing piece to file. Message: " + ex.getMessage());
                         }
                     }
                     _logFile.downloadingLog(_peerId,piece.getPieceNum(),_peerList.get(_selfId).getBitfield().getCountFinishedPieces());
@@ -391,7 +386,7 @@ public class Worker extends Thread{
                      * Increment the speed value of the peer who just received a piece
                      */
                     _peerList.get(_selfId).incrementSpeed();
-                    System.out.println(_selfId + "downloaded piece " + piece.getPieceNum() + "from " +  _peerId);
+                    //System.out.println(_selfId + "downloaded piece " + piece.getPieceNum() + "from " +  _peerId);
                     _peerList.get(_selfId).getBitfield().setBitToTrue(piece.getPieceNum());
 //                    _newlyAddedPieces.set(piece.getPieceNum(), 1);
                 }
@@ -418,9 +413,9 @@ public class Worker extends Thread{
                         //TODO: length and payload for the interested message
                         try {
                             sendinterestedMessage.sendMessage(_msgWriter);
-                            System.out.println("Info: Peer " +  _selfId + " send Interested message to " + _peerId);
+                            //System.out.println("Info: Peer " +  _selfId + " send Interested message to " + _peerId);
                         }catch (Exception e) {
-                            System.out.println("Info: Peer " +  _selfId + " is not able to send Interested message to " + _peerId);
+                            System.out.println("Error: Peer " +  _selfId + " is not able to send Interested message to " + _peerId);
 
                         }
                     } else {
@@ -429,33 +424,45 @@ public class Worker extends Thread{
                         //TODO: length and payload for the interested message
                         try {
                             sendNotInterestedMessage.sendMessage(_msgWriter);
-                            System.out.println("Info: Peer " +  _selfId + " send Not Interested message to " + _peerId);
+                            //System.out.println("Info: Peer " +  _selfId + " send Not Interested message to " + _peerId);
                         }catch (Exception e) {
-                            System.out.println("Info: Peer " +  _selfId + " is not able to send Not Interested message to " + _peerId);
+                            System.out.println("Error: Peer " +  _selfId + " is not able to send Not Interested message to " + _peerId);
 
                         }
                     }
                 }
                 //receiving  messages . Both requires similar actions
+                
+                /**
+                 * At each Iteration of the loop, each peer finds the newly added pieces and send have messages to the other threads.
+                 * Original have message is being send to only one peer which actually send the piece to self.
+                 */
+                
+                for(int i = 0 ; i < _configInfo.getTotalPieces(); i++) {
+                    if(_newlyAddedPieces.get(i) == 0 && _peerList.get(_selfId).getBitfield().getBit(i) == 1) {
+                        Message sendHaveMessageToOtherPeers = new Message();
+                        sendHaveMessageToOtherPeers.setType(Message.have);
+                        byte[] havePayload = bytetoInt.intToByteArray(i);
+                        sendHaveMessageToOtherPeers.setPayload(havePayload);
+                        sendHaveMessageToOtherPeers.setLength(havePayload.length);
+                        try {
+                            sendHaveMessageToOtherPeers.sendMessage(_msgWriter);
+                            System.out.println("Info: Peer " +  _selfId + " sent have message to " + _peerId + "for index = " + i);
+                            
+                        } catch (Exception e) {
+                            System.out.println("Error: Peer " + _selfId + " is not able to send have message to " + _peerId);
+                        }
+                        _newlyAddedPieces.set(i, 1);
+                    }
+                }
 
             }catch (Exception e) {
-                System.out.println("Error: Peer " + _selfId + " not able to receive message from " + _peerId);
+                System.out.println("Error: Peer " + _selfId + " not able to receive message from " + _peerId + ". Message - " + e.getMessage());
             }
 
 
         }
-
-    }
-
-    public void printHaveArray(){
-        for(int i = 0;i < _newlyAddedPieces.size();i++){
-            System.out.print(_newlyAddedPieces.get(i) + "|");
-        }
-        System.out.println(" ");
-    }
-
-    public void checkSendHaveMessage(){
-        System.out.println(_selfId + "is sending final have messages to " + _peerId);
+        
         while(_newlyAddedPieces.contains(0)){
             int index = _newlyAddedPieces.indexOf(0);
             Message sendHaveMessageToOtherPeers = new Message();
@@ -465,12 +472,19 @@ public class Worker extends Thread{
             sendHaveMessageToOtherPeers.setLength(havePayload.length);
             try {
                 sendHaveMessageToOtherPeers.sendMessage(_msgWriter);
-                System.out.println("Info: Peer " +  _selfId + " sent have message to " + _peerId);
-
+                System.out.println("Info: Peer " +  _selfId + " forced sent have message to " + _peerId + "for index = " + index);
+                
             } catch (Exception e) {
                 System.out.println("Info: Peer " + _selfId + " is not able to send have message to " + _peerId);
             }
             _newlyAddedPieces.set(index, 1);
         }
+    }
+
+    public void printHaveArray(){
+        for(int i = 0;i < _newlyAddedPieces.size();i++){
+            System.out.print(_newlyAddedPieces.get(i) + "|");
+        }
+        System.out.println(" ");
     }
 }

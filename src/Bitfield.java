@@ -175,15 +175,16 @@ public class Bitfield {
 		}
 		if(randomPieces.size() == 0)
 			return -1;
-		else if(randomPieces.size() > 0){
-			int counter = randomGenerator.nextInt(randomPieces.size()); 
+        else if(randomPieces.size() == 1){
+            return randomPieces.get(0);
+        } else {
+			int counter = randomGenerator.nextInt(randomPieces.size() - 1);
 			/*bitPieceIndex[randomPieces.get(counter)].set(true);
 			countFinishedPieces.set(countFinishedPieces.get() + 1);
 			if(countFinishedPieces.get() == totPieces)
 				finished.set(true);*/
 			return randomPieces.get(counter);
 		}
-		return -1;
 	}
 	public synchronized Bitfield newlyAddedPiecesIndices(Bitfield bf) {
 		Bitfield newlyAddedPieces = new Bitfield(totPieces);

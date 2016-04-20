@@ -30,31 +30,31 @@ public class Peer {
         _speed = 0;
     }
     
-    public void setId(int id){
+    public synchronized void setId(int id){
         _id = id;
     }
     
-    public int getId(){
+    public synchronized int getId(){
         return _id;
     }
     
-    public void setHostname(String hostname){
+    public synchronized void setHostname(String hostname){
         _hostname = hostname;
     }
     
-    public String getHostname(){
+    public synchronized String getHostname(){
         return _hostname;
     }
     
-    public void setPort(int port){
+    public synchronized void setPort(int port){
         _port = port;
     }
     
-    public int getPort(){
+    public synchronized int getPort(){
         return _port;
     }
     
-    public void setCompleteFile(boolean hasCompleteFile){
+    public synchronized void setCompleteFile(boolean hasCompleteFile){
         if(hasCompleteFile){
             _bitfield.setAllBitsTrue();
         } else {
@@ -62,41 +62,41 @@ public class Peer {
         }
     }
     
-    public boolean hasCompleteFile(){
+    public synchronized boolean hasCompleteFile(){
         return _bitfield.getFinished();
     }
     
-    public void setBitfield(Bitfield bitfield){
+    public synchronized void setBitfield(Bitfield bitfield){
         _bitfield = bitfield;
     }
     
-    public Bitfield getBitfield(){
+    public synchronized Bitfield getBitfield(){
         return _bitfield;
     }
     
-    public void setChoked(boolean isChoked){
+    public synchronized void setChoked(boolean isChoked){
         _isChoked = isChoked;
     }
     
-    public boolean isChoked(){
+    public synchronized boolean isChoked(){
         return _isChoked;
     }
     
-    public void setInterested(boolean isInterested){
+    public synchronized void setInterested(boolean isInterested){
         _isInterested = isInterested;
     }
     
-    public boolean isInterested(){
+    public synchronized boolean isInterested(){
         return _isInterested;
     }
     
-    public void incrementSpeed(){
+    public synchronized void incrementSpeed(){
         _speed = _speed + 1;
     }
 
-    public void resetSpeed() { _speed = 0; }
+    public synchronized void resetSpeed() { _speed = 0; }
     
-    public int getSpeed(){
+    public synchronized int getSpeed(){
         return _speed;
     }
 }
