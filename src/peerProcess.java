@@ -137,11 +137,6 @@ public class peerProcess {
                 selectOptimisticNeighbor();
                 prevOpUnchokingTime = currentTime;
             }
-            try {
-                Thread.sleep(100);
-            }catch (Exception e) {
-                System.out.println("Error: In Thread Sleeping! Message: " + e.getMessage());
-            }
             
             setChokedUnchoked();
         }
@@ -214,7 +209,7 @@ public class peerProcess {
         prefNeighbors = new ArrayList<Integer>();
         for(int i = 0;i < peerIdList.size();i++){
             int candidateId = peerIdList.get(i);
-            if(candidateId != selfID && !peerList.get(candidateId).hasCompleteFile() && peerList.get(candidateId).isInterested()){
+            if(candidateId != selfID && !peerList.get(candidateId).isExited() && !peerList.get(candidateId).hasCompleteFile() && peerList.get(candidateId).isInterested()){
                 prefNeighbors.add(peerIdList.get(i));
             }
         }
@@ -270,7 +265,7 @@ public class peerProcess {
         ArrayList<Integer> candidates = new ArrayList<Integer>();
         for(int i = 0; i < peerIdList.size(); i++) {
             int candidateId = peerIdList.get(i);
-            if(candidateId != selfID && !peerList.get(candidateId).hasCompleteFile()) {
+            if(candidateId != selfID && !peerList.get(candidateId).isExited() && !peerList.get(candidateId).hasCompleteFile() && peerList.get(candidateId).isInterested()){
                 candidates.add(peerIdList.get(i));
             }
         }//All peer are candidates to become the optimistically unchoked Neighbour except self

@@ -21,10 +21,6 @@ public class peerConfig {
 	private static int sizeOfLastPiece;
 	private static int totalPieces;
 	private static int totalPeersWithEntireFile = 0;
-//	private ArrayList<Integer> peerList;
-//	private ArrayList<String> hostList;
-//	private ArrayList<Integer> portList;
-//	private ArrayList<Boolean> hasWholeFile;
     public static int totalPeers;
 	
 	public peerConfig(Map<Integer, Peer> peerList, ArrayList<Integer> peerIdList) throws Exception
@@ -226,7 +222,6 @@ public class peerConfig {
          	   else if(modResult == 2) // token is the host name/IP address found in the current line of the file
          	   {
         		   lineNum = (tokenNum-1)/4;
-        		   //hostList.add(lineNum, scanner.next());
                    peer.setHostname(scanner.next());
          	   }	 
         	   else if(modResult == 3) // token is the port number found in the current line of the file
@@ -259,13 +254,8 @@ public class peerConfig {
 		{
 			exception.printStackTrace();
 		}
-        
-        //debug
-        //printPeerInfo();
 		
 	}
-
-
 	
 	// print info read from Common.cfg
 	public void printCommonSettings()
@@ -275,50 +265,4 @@ public class peerConfig {
 				+ "File Name: %s\nFile size: %d\nPiece size: %d\n", noOfprefNeighbors,
 				timeUnchoke, timeOptUnchoke, fileName, sizeOfFile, sizeOfPiece);
 	}
-	
-	// print info read from PeerInfo.cfg
-//	public void printPeerInfo()
-//	{
-//		int i = 0;
-//		
-//		System.out.printf("\nTotal # peers: %d\n", totalPeers);
-//		System.out.println("\nPeer List:");
-//		
-//		int wholeFile = 0;
-//		
-//		while(i < totalPeers)
-//		{
-//            Peer peer = peerList.get(peerIdList.get(i));
-//            if(peer.hasCompleteFile() == true)
-//				wholeFile = 1;
-//			else
-//				wholeFile = 0;
-//			
-//			System.out.printf("\nPeer #: %d  Host Name: %s  Port: %d "
-//					+ "hasWholeFile: %d ", peer.getId(), peer.getHostname(),
-//			peer.getPort(), wholeFile);
-//			++i;
-//		}
-//	}
-	
-//	public int getPeerList(int id)
-//	{
-//		return peerList.get(index);
-//	}
-//	
-//	public String getHostList(int index)
-//	{
-//		return hostList.get(index);
-//	}
-//	
-//	public int getPortList(int index)
-//	{
-//		return portList.get(index);
-//	}
-//	
-//	public boolean getHasWholeFile(int index)
-//	{
-//		return hasWholeFile.get(index);
-//	}
-
 }

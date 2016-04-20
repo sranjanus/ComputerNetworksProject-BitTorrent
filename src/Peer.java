@@ -6,6 +6,7 @@ public class Peer {
     private boolean _isChoked;
     private boolean _isInterested;
     private int _speed;
+    private boolean _peerExited;
     
     public Peer(int totPieces){
         _id = 0;
@@ -15,6 +16,7 @@ public class Peer {
         _isChoked = true;
         _isInterested = false;
         _speed = 0;
+        _peerExited = false;
     }
     
     public Peer(int id, String hostname, int port, boolean hasCompleteFile, int totPieces){
@@ -28,6 +30,7 @@ public class Peer {
         _isChoked = true;
         _isInterested = false;
         _speed = 0;
+        _peerExited = false;
     }
     
     public synchronized void setId(int id){
@@ -98,5 +101,16 @@ public class Peer {
     
     public synchronized int getSpeed(){
         return _speed;
+    }
+    
+    public synchronized void setExited(boolean exited){
+        if(exited){
+            setCompleteFile(true);
+        }
+        _peerExited = exited;
+    }
+    
+    public synchronized boolean isExited(){
+        return _peerExited;
     }
 }
